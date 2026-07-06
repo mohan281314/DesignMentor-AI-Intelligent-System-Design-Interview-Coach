@@ -1,0 +1,25 @@
+# ============================================================
+# Railway.app — Backend Service Configuration
+# ============================================================
+# This file is read by Railway to configure the backend service.
+# Place this in the REPO ROOT when deploying the backend.
+# ============================================================
+
+[build]
+builder          = "dockerfile"
+dockerfilePath   = "Dockerfile.prod"
+
+[deploy]
+startCommand     = ""          # CMD in Dockerfile handles this
+healthcheckPath  = "/health"
+healthcheckTimeout = 30
+restartPolicyType  = "on_failure"
+restartPolicyMaxRetries = 3
+
+[environments.production]
+# These are just documentation — set real values in Railway dashboard
+# DATABASE_URL  = set via Railway PostgreSQL plugin (auto-injected)
+# REDIS_URL     = set via Railway Redis plugin (auto-injected)
+# ENVIRONMENT   = "production"
+# SECRET_KEY    = <generate: python -c "import secrets; print(secrets.token_hex(32))">
+# GROQ_API_KEY  = <your Groq API key>

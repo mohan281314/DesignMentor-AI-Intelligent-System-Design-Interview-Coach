@@ -2,7 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
 
-  // Turbopack — faster incremental compilation (stable in Next.js 15)
+  // Standalone output — smaller Docker image, includes only what's needed
+  output: "standalone",
+
+  // Turbopack — faster incremental compilation (dev only; ignored in build)
   turbopack: {},
 
   env: {

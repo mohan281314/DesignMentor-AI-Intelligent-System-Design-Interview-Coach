@@ -1,0 +1,68 @@
+# ============================================================
+# DesignMentor AI — Production Backend Dockerfile
+# Uses Gunicorn + Uvicorn workers, non-root user, minimal image
+# ============================================================
+
+# ── Stage 1: Build ──────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install --user --no-cache-dir -r requirements.txt \
+ && pip install --user --no-cache-dir gunicorn==21.2.0
+
+# ── Stage 2: Runtime ────────────────────────────────────────
+FROM python:3.11-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root user
+RUN groupadd -r app && useradd -r -g app -d /app app
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /home/app/.local
+
+# Copy source (exclude secrets — they come from env vars at runtime)
+COPY --chown=app:app app/           ./app/
+COPY --chown=app:app prompts/       ./prompts/
+COPY --chown=app:app alembic/       ./alembic/
+COPY --chown=app:app alembic.ini    ./alembic.ini
+COPY --chown=app:app frontend/      ./frontend/
+
+RUN mkdir -p uploads temp/pdfs && chown -R app:app /app
+
+USER app
+
+ENV PATH=/home/app/.local/bin:$PATH
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+
+EXPOSE 8000
+
+# Gunicorn with Uvicorn workers — production-grade
+# Railway injects $PORT; fall back to 8000
+CMD gunicorn app.main:app \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --workers ${WEB_CONCURRENCY:-2} \
+    --bind 0.0.0.0:${PORT:-8000} \
+    --timeout 120 \
+    --keep-alive 5 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level ${LOG_LEVEL:-info}

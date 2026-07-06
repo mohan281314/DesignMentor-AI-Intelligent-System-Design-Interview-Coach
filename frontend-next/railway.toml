@@ -1,0 +1,21 @@
+# ============================================================
+# Railway.app — Frontend Service Configuration
+# ============================================================
+# Place this in the frontend-next/ directory when deploying
+# the frontend as a separate Railway service.
+# ============================================================
+
+[build]
+builder        = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[build.args]
+NEXT_PUBLIC_API_URL = "${{backend.RAILWAY_PUBLIC_DOMAIN}}"
+
+[deploy]
+startCommand       = ""
+healthcheckPath    = "/"
+healthcheckTimeout = 30
+
+[environments.production]
+# NEXT_PUBLIC_API_URL = <your backend Railway URL e.g. https://designmentor-api.up.railway.app>

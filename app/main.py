@@ -79,15 +79,29 @@ _META_LAST_Q = "interview_last_question"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    logger.info("DesignMentor AI v2.0 starting up…")
+    from app.core.config import get_settings as _gs
+    _s = _gs()
+    logger.info("DesignMentor AI v2.0 starting up… [env=%s]", _s.environment)
 
-    # Create DB tables (SQLite works immediately; PostgreSQL requires the DB to exist)
+    # Run Alembic migrations in production; create tables directly in dev/test
     try:
-        from app.db.base import create_tables
-        create_tables()
-        logger.info("Database tables ready.")
+        if _s.is_production:
+            import subprocess, sys
+            logger.info("Running Alembic migrations…")
+            result = subprocess.run(
+                [sys.executable, "-m", "alembic", "upgrade", "head"],
+                capture_output=True, text=True, timeout=60,
+            )
+            if result.returncode != 0:
+                logger.error("Alembic migration failed:\n%s", result.stderr)
+            else:
+                logger.info("Migrations applied successfully.")
+        else:
+            from app.db.base import create_tables
+            create_tables()
+            logger.info("Database tables ready.")
     except Exception as exc:
-        logger.warning("Could not create DB tables (auth endpoints will be unavailable): %s", exc)
+        logger.warning("DB setup error (auth endpoints may be unavailable): %s", exc)
 
     await sm.start_cleanup_task()
 
@@ -114,6 +128,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # ---------------------------------------------------------------------------
 
 def create_app() -> FastAPI:
+    from app.core.config import get_settings as _get_settings
+    _settings = _get_settings()
+
+    # In production hide docs behind a flag
+    docs_url   = "/docs"   if not _settings.is_production else None
+    redoc_url  = "/redoc"  if not _settings.is_production else None
+
     app = FastAPI(
         title="DesignMentor AI",
         description=(
@@ -123,14 +144,11 @@ def create_app() -> FastAPI:
         ),
         version="2.0.0",
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc",
+        docs_url=docs_url,
+        redoc_url=redoc_url,
     )
 
     # ---- CORS --------------------------------------------------------
-    from app.core.config import get_settings as _get_settings
-    _settings = _get_settings()
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_settings.cors_origins,
