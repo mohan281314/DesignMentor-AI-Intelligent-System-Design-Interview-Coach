@@ -15,27 +15,44 @@ export default function RegisterPage() {
   const router = useRouter();
   const { setTokens, setUser } = useAuthStore();
 
-  const [form, setForm]   = useState({ email: "", password: "", full_name: "" });
-  const [showPw, setShowPw] = useState(false);
+  const [form,    setForm]    = useState({ email: "", password: "", full_name: "" });
+  const [showPw,  setShowPw]  = useState(false);
   const [loading, setLoading] = useState(false);
 
   const update = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  const pwStrength = form.password.length >= 8
-    ? form.password.length >= 12 ? "strong" : "medium"
-    : form.password.length > 0 ? "weak" : "";
+  const pwStrength =
+    form.password.length >= 12 ? "strong" :
+    form.password.length >= 8  ? "medium"  :
+    form.password.length > 0   ? "weak"    : "";
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.password.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+    if (form.password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
     setLoading(true);
     try {
-      await authApi.register(form.email, form.password, form.full_name);
+      // 1. Register — returns the new User object directly (no extra /me call)
+      const newUser = await authApi.register(
+        form.email, form.password, form.full_name || undefined
+      );
+
+      // 2. Login to get tokens
       const tokens = await authApi.login(form.email, form.password);
+
+      // 3. Store tokens in localStorage FIRST so all later requests carry Authorization
+      if (typeof window !== "undefined") {
+        localStorage.setItem("access_token",  tokens.access_token);
+        localStorage.setItem("refresh_token", tokens.refresh_token);
+      }
       setTokens(tokens.access_token, tokens.refresh_token);
-      const user = await authApi.me();
-      setUser(user);
-      toast.success("Account created! Welcome to DesignMentor AI 🎉");
+
+      // 4. Use the user already returned from /register — no extra request needed
+      setUser(newUser);
+
+      toast.success("Account created! Welcome to DesignMentor AI");
       router.push("/dashboard");
     } catch (err: any) {
       toast.error(err.message ?? "Registration failed");
@@ -50,12 +67,15 @@ export default function RegisterPage() {
         <div className="text-center">
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl mb-3">DM</div>
           <h1 className="text-2xl font-bold">Create your account</h1>
-          <p className="text-muted-foreground text-sm mt-1">Start mastering system design interviews</p>
+          <p className="text-muted-foreground text-sm mt-1">Start mastering system design interviews today</p>
         </div>
 
-        {/* Benefits */}
         <div className="space-y-1.5">
-          {["Track your performance over time", "Save all your designs & interviews", "Get personalized recommendations"].map((b) => (
+          {[
+            "Track your performance across 5 dimensions",
+            "Save all your designs and interviews",
+            "Get personalised recommendations",
+          ].map((b) => (
             <div key={b} className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
               {b}
@@ -68,35 +88,41 @@ export default function RegisterPage() {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name <span className="text-muted-foreground">(optional)</span></Label>
-                <Input id="name" placeholder="Alex Smith" value={form.full_name} onChange={(e) => update("full_name", e.target.value)} />
+                <Input
+                  id="name" placeholder="Alex Smith"
+                  value={form.full_name} onChange={(e) => update("full_name", e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@example.com" value={form.email} onChange={(e) => update("email", e.target.value)} required />
+                <Input
+                  id="email" type="email" placeholder="you@example.com"
+                  value={form.email} onChange={(e) => update("email", e.target.value)} required
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Password <span className="text-muted-foreground">(min 8 chars)</span></Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPw ? "text" : "password"}
                     placeholder="Min. 8 characters"
-                    value={form.password}
-                    onChange={(e) => update("password", e.target.value)}
-                    required
-                    className="pr-10"
+                    value={form.password} onChange={(e) => update("password", e.target.value)}
+                    required className="pr-10"
                   />
-                  <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-8 w-8" onClick={() => setShowPw(!showPw)}>
+                  <Button type="button" variant="ghost" size="icon"
+                    className="absolute right-1 top-1 h-8 w-8"
+                    onClick={() => setShowPw(!showPw)}>
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
                 {pwStrength && (
                   <div className="flex gap-1 mt-1">
-                    {["weak","medium","strong"].map((s, i) => (
+                    {["weak", "medium", "strong"].map((s, i) => (
                       <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${
-                        (pwStrength === "weak"   && i === 0) ? "bg-red-500" :
-                        (pwStrength === "medium" && i <= 1) ? "bg-yellow-500" :
-                        (pwStrength === "strong" && i <= 2) ? "bg-green-500" : "bg-muted"
+                        pwStrength === "weak"   && i === 0 ? "bg-red-500"    :
+                        pwStrength === "medium" && i <= 1  ? "bg-yellow-500" :
+                        pwStrength === "strong" && i <= 2  ? "bg-green-500"  : "bg-muted"
                       }`} />
                     ))}
                   </div>
@@ -104,7 +130,7 @@ export default function RegisterPage() {
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Account
+                {loading ? "Creating account…" : "Create Account"}
               </Button>
             </form>
           </CardContent>

@@ -7,7 +7,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 
@@ -15,20 +15,30 @@ export default function LoginPage() {
   const router = useRouter();
   const { setTokens, setUser } = useAuthStore();
 
-  const [email, setEmail]       = useState("");
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [showPw, setShowPw]     = useState(false);
-  const [loading, setLoading]   = useState(false);
+  const [showPw,   setShowPw]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { toast.error("Please fill in all fields"); return; }
     setLoading(true);
     try {
+      // 1. Get tokens
       const tokens = await authApi.login(email, password);
+
+      // 2. Store tokens in localStorage FIRST so subsequent requests include Authorization header
+      if (typeof window !== "undefined") {
+        localStorage.setItem("access_token",  tokens.access_token);
+        localStorage.setItem("refresh_token", tokens.refresh_token);
+      }
       setTokens(tokens.access_token, tokens.refresh_token);
+
+      // 3. Now fetch user profile (token is available in header)
       const user = await authApi.me();
       setUser(user);
+
       toast.success(`Welcome back${user.full_name ? ", " + user.full_name : ""}!`);
       router.push("/dashboard");
     } catch (err: any) {
@@ -41,7 +51,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
-        {/* Logo */}
         <div className="text-center">
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl mb-3">
             DM
@@ -56,13 +65,9 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
+                  id="email" type="email" placeholder="you@example.com"
+                  value={email} onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email" required
                 />
               </div>
               <div className="space-y-2">
@@ -72,24 +77,16 @@ export default function LoginPage() {
                     id="password"
                     type={showPw ? "text" : "password"}
                     placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    required
-                    className="pr-10"
+                    value={password} onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password" required className="pr-10"
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
+                  <Button type="button" variant="ghost" size="icon"
                     className="absolute right-1 top-1 h-8 w-8"
-                    onClick={() => setShowPw(!showPw)}
-                  >
+                    onClick={() => setShowPw(!showPw)}>
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
-
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
@@ -106,7 +103,7 @@ export default function LoginPage() {
                 <span className="bg-card px-2 text-muted-foreground">or try without an account</span>
               </div>
             </div>
-            <Link href="/app" className="w-full">
+            <Link href="/design" className="w-full">
               <Button variant="outline" className="w-full">Continue as Guest</Button>
             </Link>
           </CardFooter>
