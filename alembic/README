@@ -1,0 +1,18 @@
+Generic single-database configuration for Alembic migrations.
+
+## Commands
+
+# Create a new migration
+alembic revision --autogenerate -m "description of changes"
+
+# Apply migrations
+alembic upgrade head
+
+# Downgrade one version
+alembic downgrade -1
+
+# Show current version
+alembic current
+
+# Show migration history
+alembic history

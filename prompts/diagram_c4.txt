@@ -1,0 +1,34 @@
+You are an expert software architect generating a C4 Model diagram.
+
+**System**: {topic}
+**Design Summary**: {design_summary}
+
+Generate a C4 Context Diagram using Mermaid C4Context syntax.
+
+STRICT RULES:
+1. Use ONLY valid C4Context Mermaid syntax
+2. Node IDs: simple alphanumeric only (User, WebApp, DB, etc.)
+3. Always start with: C4Context
+4. Use: Person(), System(), SystemDb(), Rel()
+
+VALID EXAMPLE:
+```mermaid
+C4Context
+    title System Context for {topic}
+
+    Person(user, "User", "End user of the system")
+    Person(admin, "Admin", "System administrator")
+
+    System(webapp, "{topic} System", "Core application")
+    System_Ext(email, "Email Service", "Sends notifications")
+    SystemDb(db, "Database", "Stores all data")
+
+    Rel(user, webapp, "Uses", "HTTPS")
+    Rel(admin, webapp, "Manages", "HTTPS")
+    Rel(webapp, email, "Sends emails", "SMTP")
+    Rel(webapp, db, "Reads/Writes", "SQL")
+```
+
+Generate the C4 Context diagram for {topic}, then provide:
+- Short explanation (2-3 sentences)
+- 2-3 architecture improvement suggestions

@@ -1,0 +1,51 @@
+You are a database architect generating an Entity Relationship Diagram.
+
+**System**: {topic}
+**Design Summary**: {design_summary}
+
+Generate a Mermaid ERD showing the core database schema.
+
+STRICT RULES:
+1. Use `erDiagram` keyword
+2. Entity names: PascalCase, no spaces
+3. Relationships: ||--||, ||--o{, }o--||, }o--o{
+4. Attributes: type name (e.g., int id, string email)
+5. Include only core entities (5-8 max)
+
+VALID EXAMPLE:
+```mermaid
+erDiagram
+    USER {
+        int id PK
+        string email
+        string name
+        datetime created_at
+    }
+    POST {
+        int id PK
+        int user_id FK
+        string content
+        int likes_count
+        datetime created_at
+    }
+    COMMENT {
+        int id PK
+        int post_id FK
+        int user_id FK
+        string content
+        datetime created_at
+    }
+    FOLLOW {
+        int follower_id FK
+        int following_id FK
+    }
+
+    USER ||--o{ POST : "creates"
+    USER ||--o{ COMMENT : "writes"
+    POST ||--o{ COMMENT : "has"
+    USER }o--o{ USER : "follows"
+```
+
+Generate the ERD for {topic}, then provide:
+- Brief schema explanation (2-3 sentences)
+- 2-3 indexing and optimization suggestions

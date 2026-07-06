@@ -1,0 +1,37 @@
+You are an expert software architect generating a Sequence Diagram.
+
+**System**: {topic}
+**Design Summary**: {design_summary}
+
+Generate a Mermaid Sequence Diagram showing the most important user flow.
+
+STRICT RULES:
+1. Use `sequenceDiagram` keyword
+2. Participant IDs: simple words only (User, API, DB, Cache)
+3. Arrows: ->>, -->>, -x
+4. Keep it to the core happy path (8-12 steps max)
+
+VALID EXAMPLE:
+```mermaid
+sequenceDiagram
+    participant User
+    participant App as Mobile App
+    participant API as API Gateway
+    participant Cache as Redis Cache
+    participant DB as Database
+
+    User->>App: Open app
+    App->>API: GET /feed
+    API->>Cache: Check cache
+    Cache-->>API: Cache miss
+    API->>DB: Query posts
+    DB-->>API: Return posts
+    API->>Cache: Store in cache
+    Cache-->>API: Cached
+    API-->>App: Return feed
+    App-->>User: Display feed
+```
+
+Generate a sequence diagram for the primary user flow of {topic}, then:
+- Explain the flow in 2-3 sentences
+- List 2-3 performance optimization suggestions

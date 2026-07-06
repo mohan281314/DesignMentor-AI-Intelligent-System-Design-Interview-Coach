@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — DesignMentor AI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    /* ── Auth-specific styles ───────────────────────────── */
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+
+    .auth-card {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: fadeUp .4s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(20px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .auth-logo-icon {
+      background: linear-gradient(135deg, #6c63ff, #a855f7);
+      border-radius: 10px;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .auth-logo-text { font-size: 22px; font-weight: 700; color: #e0e0e0; }
+    .auth-logo-text span { color: #6c63ff; }
+
+    .auth-title { font-size: 24px; font-weight: 700; color: #e0e0e0; text-align: center; margin-bottom: 6px; }
+    .auth-subtitle { font-size: 14px; color: #8892a4; text-align: center; margin-bottom: 28px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #a0aec0; margin-bottom: 7px; }
+    .form-group input {
+      width: 100%; padding: 11px 14px;
+      background: #0f1b35; border: 1px solid #1e3a5f;
+      border-radius: 8px; color: #e0e0e0; font-size: 14px;
+      transition: border-color .2s, box-shadow .2s;
+      box-sizing: border-box;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108,99,255,.15);
+    }
+    .form-group input::placeholder { color: #4a5568; }
+
+    .pw-wrapper { position: relative; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: #6b7280; font-size: 16px;
+      padding: 4px; line-height: 1;
+    }
+    .pw-toggle:hover { color: #6c63ff; }
+
+    .btn-auth {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, #6c63ff, #a855f7);
+      border: none; border-radius: 8px;
+      color: #fff; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s, transform .1s;
+      margin-top: 8px;
+    }
+    .btn-auth:hover { opacity: .9; }
+    .btn-auth:active { transform: scale(.98); }
+    .btn-auth:disabled { opacity: .5; cursor: not-allowed; }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #1e3a5f; }
+    .divider span { font-size: 12px; color: #6b7280; white-space: nowrap; }
+
+    .btn-guest {
+      width: 100%; padding: 11px;
+      background: transparent; border: 1px solid #2d4a6e;
+      border-radius: 8px; color: #a0aec0; font-size: 14px;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-guest:hover { border-color: #6c63ff; color: #6c63ff; background: rgba(108,99,255,.05); }
+
+    .auth-footer { text-align: center; margin-top: 22px; font-size: 14px; color: #6b7280; }
+    .auth-footer a { color: #6c63ff; text-decoration: none; font-weight: 500; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .error-msg {
+      background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.3);
+      color: #fca5a5; border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .error-msg.show { display: block; }
+
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="auth-card">
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="auth-logo-icon">⚙️</div>
+      <div class="auth-logo-text">Design<span>Mentor</span> <span style="font-size:12px;color:#6b7280;">AI</span></div>
+    </div>
+
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-subtitle">Sign in to your account to continue</p>
+
+    <!-- Error -->
+    <div id="error-msg" class="error-msg"></div>
+
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input id="email" type="email" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="pw-wrapper">
+          <input id="password" type="password" placeholder="••••••••" required autocomplete="current-password" />
+          <button type="button" class="pw-toggle" onclick="togglePw('password', this)">👁️</button>
+        </div>
+      </div>
+
+      <button type="submit" id="login-btn" class="btn-auth">Sign In</button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+    <button class="btn-guest" onclick="continueAsGuest()">Continue as Guest</button>
+
+    <p class="auth-footer">
+      Don't have an account? <a href="/static/register.html">Create one free</a>
+    </p>
+  </div>
+
+  <script>
+    const API = '';   // same origin
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const errEl = document.getElementById('error-msg');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      errEl.classList.remove('show');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Signing in…';
+
+      try {
+        const res = await fetch(`${API}/api/v1/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || 'Login failed');
+        }
+
+        // Store tokens
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+
+        // Fetch user info
+        const me = await fetch(`${API}/api/v1/auth/me`, {
+          headers: { 'Authorization': `Bearer ${data.access_token}` }
+        });
+        if (me.ok) {
+          const user = await me.json();
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        // Redirect to main app
+        window.location.href = '/';
+
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Sign In';
+      }
+    }
+
+    function togglePw(id, btn) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    function continueAsGuest() {
+      // Clear any stored tokens so the app runs in guest mode
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+
+    // If already logged in, redirect immediately
+    if (localStorage.getItem('access_token')) {
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>

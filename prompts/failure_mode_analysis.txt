@@ -1,0 +1,39 @@
+You are a Site Reliability Engineer and chaos engineering expert at a FAANG company.
+
+**System Design**: {topic}
+**Design Summary**: {design_summary}
+
+Perform a comprehensive **Failure Mode Analysis** for this system. For each failure, think like a production incident is happening right now.
+
+## Structure your analysis as:
+
+### 1. Critical Failure Modes
+For each failure mode, provide:
+- **Failure**: What breaks and how
+- **Blast Radius**: How many users/services are affected (%)
+- **Detection**: How you would detect it (alerts, metrics, logs)
+- **MTTR**: Estimated mean time to recovery
+- **Mitigation**: Immediate fix
+- **Prevention**: Long-term architectural fix
+
+Cover these categories:
+- **Single Points of Failure** (no redundancy)
+- **Cascading Failures** (one service bringing down others)
+- **Data Consistency Failures** (split-brain, stale reads, lost writes)
+- **Thundering Herd** (traffic spikes overwhelming the system)
+- **Slow Degradation** (disk full, memory leak, connection pool exhaustion)
+- **Security Failures** (auth bypass, data leak, injection)
+
+### 2. Chaos Engineering Experiments
+List 3-5 specific experiments to validate resilience:
+- What to inject (kill a node, partition network, spike latency)
+- What metric to observe
+- What the expected behavior is
+
+### 3. Overall Resilience Score
+Rate the design 1-10 on: Availability, Fault Tolerance, Observability, Security.
+
+### 4. Top 3 Most Dangerous Gaps
+The three things most likely to cause a P0 incident in production.
+
+Be brutally honest. Production systems fail in unexpected ways.

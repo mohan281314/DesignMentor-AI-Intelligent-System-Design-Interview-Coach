@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "designmentor-ai"
+version = "0.1.0"
+description = "AI-powered System Design Interview Coach"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.111.0",
+    "uvicorn[standard]==0.30.1",
+    "langchain==0.2.6",
+    "langchain-openai==0.1.13",
+    "langchain-community==0.2.6",
+    "openai==1.35.7",
+    "python-dotenv==1.0.1",
+    "pydantic==2.7.4",
+    "pydantic-settings==2.3.4",
+    "httpx==0.27.0",
+    "sse-starlette==2.1.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

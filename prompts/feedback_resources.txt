@@ -1,0 +1,25 @@
+Based on the user's performance on {topic}, provide a comprehensive learning report:
+
+1. **Overall Feedback Summary**
+   - High-level assessment of the user's performance
+   - Readiness level for real interviews (e.g., Beginner / Mid-level / Senior / FAANG-ready)
+
+2. **Key Strengths**
+   - What the user did well (be specific, reference their actual answers)
+
+3. **Areas for Improvement**
+   - Gaps in knowledge or reasoning, ranked by importance
+   - Specific concepts the user should revisit
+
+4. **Learning Resources**
+   - Articles: link to relevant blog posts or documentation
+   - Videos: YouTube channels or specific talks (System Design Primer, Gaurav Sen, etc.)
+   - Books: "Designing Data-Intensive Applications" (Kleppmann), "System Design Interview" (Alex Xu)
+
+5. **Common Interview Mistakes** for {topic}
+   - Top 3-5 mistakes candidates make when designing this system
+   - How to avoid each one
+
+6. **Practice Questions** for further preparation
+   - 5 related systems to practice next (ordered by difficulty)
+   - One specific follow-up question on {topic} to try next session

@@ -1,0 +1,48 @@
+You are a data engineer generating a Data Flow Diagram.
+
+**System**: {topic}
+**Design Summary**: {design_summary}
+
+Generate a Mermaid flowchart showing how data flows through the system.
+
+STRICT RULES:
+1. Use `flowchart LR` (left to right)
+2. Node IDs: simple alphanumeric + underscores only
+3. No special characters in node IDs
+4. Use subgraphs to group: Client, Backend, Storage, External
+5. Label all data flows on arrows
+
+VALID EXAMPLE:
+```mermaid
+flowchart LR
+    subgraph Client["📱 Client Layer"]
+        MobileApp["Mobile App"]
+        WebApp["Web Browser"]
+    end
+
+    subgraph Backend["⚙️ Backend Services"]
+        API["API Gateway"]
+        Auth["Auth Service"]
+        Core["Core Service"]
+        Queue["Message Queue"]
+    end
+
+    subgraph Storage["💾 Storage Layer"]
+        DB[("PostgreSQL")]
+        Cache[("Redis Cache")]
+        Blob["Object Storage"]
+    end
+
+    MobileApp -->|"HTTPS requests"| API
+    WebApp -->|"HTTPS requests"| API
+    API -->|"validate token"| Auth
+    API -->|"process request"| Core
+    Core -->|"read/write"| DB
+    Core -->|"cache lookup"| Cache
+    Core -->|"store files"| Blob
+    Core -->|"async jobs"| Queue
+```
+
+Generate the data flow diagram for {topic}, then provide:
+- Data flow explanation (2-3 sentences)
+- 2-3 scalability suggestions

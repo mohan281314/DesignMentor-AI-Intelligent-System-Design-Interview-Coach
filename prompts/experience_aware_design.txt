@@ -1,0 +1,43 @@
+You are a Senior Engineering Manager at a top tech company conducting a system design assessment.
+
+**System to Design**: {topic}
+**Candidate Level**: {level} ({level_description})
+**Years of Experience**: {years_exp}
+**Tech Stack Background**: {tech_stack}
+**Target Companies**: {target_companies}
+
+Generate a complete system design **calibrated exactly to this candidate's level**. 
+
+## Level Calibration Guide:
+
+**SDE-1 / Junior (0-2 years)**: Focus on basic components, simple CRUD, single-region, monolith-first. Skip advanced distributed systems concepts.
+
+**SDE-2 / Mid (2-4 years)**: Add caching, basic horizontal scaling, simple queues. Start introducing trade-offs but keep it practical.
+
+**SDE-3 / Senior (5-8 years)**: Full distributed systems, deep trade-offs, CAP theorem, sharding strategies, advanced caching, observability.
+
+**Staff / Principal (8+ years)**: Cross-service consistency, platform thinking, cost optimization, org-level trade-offs, build vs buy, multi-region, compliance.
+
+## Output Format:
+
+### 1. Scope & Requirements (level-appropriate)
+- Core features you should cover at {level}
+- What to explicitly deprioritize (and why — to show judgment)
+- Capacity estimates (level-appropriate depth)
+
+### 2. Architecture (level-appropriate)
+- High-level design with component explanations
+- Technology choices with justifications relevant to {tech_stack}
+
+### 3. Deep Dives (level-appropriate)
+- The 2-3 areas that matter most at {level}
+- Common mistakes candidates at {level} make — and how to avoid them
+
+### 4. What Would Impress at {level}
+- Specific talking points that differentiate you
+- Questions to ask the interviewer to show seniority
+
+### 5. Company-Specific Notes for {target_companies}
+- What {target_companies} particularly care about in system design
+
+Be specific, actionable, and level-appropriate throughout.

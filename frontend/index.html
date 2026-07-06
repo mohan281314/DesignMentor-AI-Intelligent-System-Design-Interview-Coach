@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DesignMentor AI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <!-- Marked.js for markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Mermaid.js for architecture diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <span class="logo-icon">⚙️</span>
+      <span class="logo-text">DesignMentor <span class="accent">AI</span></span>
+    </div>
+    <p class="tagline">System Design Interview Coach — powered by LLaMA 3.3 70B</p>
+
+    <!-- Auth controls (injected by JS) -->
+    <div id="auth-header" style="display:flex;align-items:center;gap:10px;margin-left:auto;"></div>
+  </header>
+
+  <!-- ── Tab Nav ────────────────────────────────────────── -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="design">🏗️ Design</button>
+    <button class="tab-btn" data-tab="interview">🎤 Interview</button>
+    <button class="tab-btn" data-tab="evaluate">📊 Evaluate</button>
+    <button class="tab-btn" data-tab="diagram">🗺️ Diagram</button>
+    <button class="tab-btn" data-tab="feedback">📚 Feedback</button>
+    <button class="tab-btn" data-tab="chat">💬 Chat</button>
+  </nav>
+
+  <!-- ── Main Content ───────────────────────────────────── -->
+  <main>
+
+    <!-- DESIGN TAB -->
+    <section id="tab-design" class="tab-panel active">
+      <div class="panel-header">
+        <h2>System Design Generator</h2>
+        <p>Generate a complete production-grade system design for any topic.</p>
+      </div>
+      <div class="input-row">
+        <input id="design-topic" type="text" placeholder="e.g. Instagram, Netflix, Uber, WhatsApp..." />
+        <button id="design-btn" class="btn-primary">Generate Design</button>
+      </div>
+      <div id="design-output" class="output-box hidden"></div>
+    </section>
+
+    <!-- INTERVIEW TAB -->
+    <section id="tab-interview" class="tab-panel hidden">
+      <div class="panel-header">
+        <h2>Mock Interview</h2>
+        <p>Start a realistic system design interview. Answer up to 5 questions with AI evaluation.</p>
+      </div>
+      <!-- Start screen -->
+      <div id="interview-start-screen">
+        <div class="input-row">
+          <input id="interview-topic" type="text" placeholder="e.g. Netflix, Twitter, Dropbox..." />
+          <button id="interview-start-btn" class="btn-primary">Start Interview</button>
+        </div>
+      </div>
+      <!-- Active interview screen -->
+      <div id="interview-active-screen" class="hidden">
+        <div class="interview-meta">
+          <span id="interview-topic-label"></span>
+          <span id="interview-progress">Question 1 / 5</span>
+        </div>
+        <div id="interview-question-box" class="question-box"></div>
+        <textarea id="interview-answer" rows="6" placeholder="Type your answer here..."></textarea>
+        <div class="btn-row">
+          <button id="interview-submit-btn" class="btn-primary">Submit Answer</button>
+          <button id="interview-reset-btn" class="btn-ghost">Start New Interview</button>
+        </div>
+        <div id="interview-eval-box" class="output-box hidden"></div>
+      </div>
+      <!-- Complete screen -->
+      <div id="interview-complete-screen" class="hidden">
+        <div class="complete-banner">
+          <h3>🎉 Interview Complete!</h3>
+          <p>You've answered all 5 questions. Check your evaluations above.</p>
+          <button id="interview-new-btn" class="btn-primary">Start New Interview</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVALUATE TAB -->
+    <section id="tab-evaluate" class="tab-panel hidden">
+      <div class="panel-header">
+        <h2>Answer Evaluator</h2>
+        <p>Evaluate any system design answer without needing a session.</p>
+      </div>
+      <div class="form-stack">
+        <label>Question</label>
+        <textarea id="eval-question" rows="3" placeholder="e.g. How would you design a URL shortener?"></textarea>
+        <label>Your Answer</label>
+        <textarea id="eval-answer" rows="6" placeholder="Describe your system design..."></textarea>
+        <label>Reference Design <span class="optional">(optional)</span></label>
+        <textarea id="eval-reference" rows="3" placeholder="Paste a reference design to compare against..."></textarea>
+        <button id="eval-btn" class="btn-primary">Evaluate Answer</button>
+      </div>
+      <div id="eval-output" class="output-box hidden"></div>
+    </section>
+
+    <!-- DIAGRAM TAB -->
+    <section id="tab-diagram" class="tab-panel hidden">
+      <div class="panel-header">
+        <h2>Architecture Diagram</h2>
+        <p>Generate a Mermaid architecture diagram for any system.</p>
+      </div>
+      <div class="form-stack">
+        <label>System Name</label>
+        <input id="diagram-topic" type="text" placeholder="e.g. Uber, Netflix..." />
+        <label>Design Summary</label>
+        <textarea id="diagram-summary" rows="5" placeholder="Describe the system components and data flow..."></textarea>
+        <button id="diagram-btn" class="btn-primary">Generate Diagram</button>
+      </div>
+      <div id="diagram-output" class="hidden">
+        <div id="diagram-render" class="diagram-box"></div>
+        <div id="diagram-explanation" class="output-box"></div>
+        <div id="diagram-suggestions" class="suggestions-box"></div>
+      </div>
+    </section>
+
+    <!-- FEEDBACK TAB -->
+    <section id="tab-feedback" class="tab-panel hidden">
+      <div class="panel-header">
+        <h2>Learning Report</h2>
+        <p>Get a personalised post-interview learning report with resources and tips.</p>
+      </div>
+      <div class="form-stack">
+        <label>Topic</label>
+        <input id="feedback-topic" type="text" placeholder="e.g. Netflix, Instagram..." />
+        <label>Session ID <span class="optional">(optional — links to your interview history)</span></label>
+        <input id="feedback-session" type="text" placeholder="Paste session_id from your interview..." />
+        <button id="feedback-btn" class="btn-primary">Generate Report</button>
+      </div>
+      <div id="feedback-output" class="output-box hidden"></div>
+    </section>
+
+    <!-- CHAT TAB -->
+    <section id="tab-chat" class="tab-panel hidden">
+      <div class="panel-header">
+        <h2>Coaching Chat</h2>
+        <p>Ask anything about system design. Your coach remembers the conversation.</p>
+      </div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-row">
+        <textarea id="chat-input" rows="2" placeholder="Ask a system design question..."></textarea>
+        <button id="chat-send-btn" class="btn-primary">Send</button>
+      </div>
+      <div class="btn-row">
+        <button id="chat-clear-btn" class="btn-ghost">Clear Conversation</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Toast ──────────────────────────────────────────── -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ── Scripts ───────────────────────────────────────── -->
+  <script src="/static/app.js"></script>
+  <script src="/static/auth.js"></script>
+</body>
+</html>

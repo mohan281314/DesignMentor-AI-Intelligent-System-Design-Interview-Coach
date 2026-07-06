@@ -1,0 +1,164 @@
+version: "3.9"
+
+# ============================================================
+# DesignMentor AI v2.0 — Local Development Stack
+# ============================================================
+# Usage:
+#   docker compose up -d          # start all services
+#   docker compose down           # stop all services
+#   docker compose logs -f api    # follow API logs
+#   docker compose ps             # check service status
+# ============================================================
+
+services:
+
+  # ──────────────────────────────────────────────────────────
+  # PostgreSQL 16  (persistent relational storage)
+  # ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: designmentor_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     designmentor
+      POSTGRES_PASSWORD: designmentor
+      POSTGRES_DB:       designmentor
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U designmentor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────
+  # Redis 7  (sessions, caching, rate-limiting)
+  # ──────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: designmentor_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --requirepass ""
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────
+  # FastAPI Backend
+  # ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: designmentor_api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL:  postgresql+psycopg2://designmentor:designmentor@postgres:5432/designmentor
+      REDIS_URL:     redis://redis:6379/0
+      ENVIRONMENT:   development
+      HOST:          0.0.0.0
+      PORT:          8000
+    ports:
+      - "8000:8000"
+    volumes:
+      # Hot-reload in dev: mount source code
+      - .:/app
+      - /app/__pycache__
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir /app/app
+      --log-level info
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────────────────
+  # Next.js Frontend  (built in Phase 4 — placeholder for now)
+  # ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend-next
+      dockerfile: Dockerfile
+    container_name: designmentor_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NODE_ENV:            development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend-next:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    profiles:
+      - nextjs   # only starts with: docker compose --profile nextjs up
+    command: npm run dev
+
+  # ──────────────────────────────────────────────────────────
+  # pgAdmin  (optional DB GUI for development)
+  # ──────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: designmentor_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@designmentor.ai
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    profiles:
+      - tools   # only starts with: docker compose --profile tools up
+
+  # ──────────────────────────────────────────────────────────
+  # Redis Insight  (optional Redis GUI for development)
+  # ──────────────────────────────────────────────────────────
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: designmentor_redisinsight
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+# ──────────────────────────────────────────────────────────
+# Volumes  (named volumes persist across container restarts)
+# ──────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    name: designmentor_postgres_data
+  redis_data:
+    name: designmentor_redis_data
+  uploads_data:
+    name: designmentor_uploads_data

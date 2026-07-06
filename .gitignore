@@ -1,0 +1,153 @@
+# =============================================================================
+# DesignMentor AI — .gitignore
+# =============================================================================
+
+# ── Secrets & Environment ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example          # keep the example template
+*.pem
+*.key
+secrets/
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+.virtualenv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+*.whl
+MANIFEST
+
+# Testing & coverage
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.hypothesis/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# MyPy / type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+pyrightconfig.json
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# ── Database ─────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+designmentor.db
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+logs/
+log/
+
+# ── Uploads & Temp files ─────────────────────────────────────────────────────
+uploads/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# PDF temp directory
+temp/pdfs/
+
+# ── Next.js / Node.js ────────────────────────────────────────────────────────
+node_modules/
+.next/
+.nuxt/
+out/
+dist/
+.output/
+.vercel/
+.netlify/
+
+# Next.js cache
+frontend-next/.next/
+frontend-next/out/
+frontend-next/node_modules/
+
+# npm / yarn / pnpm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.yarn/
+.pnp.*
+package-lock.json        # keep yarn.lock or pnpm-lock if used
+*.tsbuildinfo
+
+# ── IDEs & Editors ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── OS files ─────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+# Keep docker-compose.yml but ignore local override
+docker-compose.override.yml
+
+# ── Test output ──────────────────────────────────────────────────────────────
+verify_auth_result.txt
+verify_v21_result.txt
+auth_test_result.txt
+
+# ── Alembic generated versions (keep structure, not versions) ────────────────
+# alembic/versions/*.py   # uncomment if you want to exclude migration files
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+.cache/
+*.bak
+*.backup
+*.orig
+*.rej

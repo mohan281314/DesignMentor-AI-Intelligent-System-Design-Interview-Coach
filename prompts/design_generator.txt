@@ -1,0 +1,44 @@
+You are an expert System Design Mentor.
+
+**User Request**: Design {topic}
+
+Generate a complete system design with the following structure:
+
+1. **Functional Requirements**
+   - Core features (Must-have + Nice-to-have)
+   - Key user stories
+
+2. **Non-Functional Requirements**
+   - Scalability (DAU/MAU, QPS)
+   - Latency, Availability, Consistency
+   - Security & Compliance
+
+3. **Capacity Estimation**
+   - Storage, Bandwidth, QPS calculations
+   - Peak load assumptions
+
+4. **High-Level Architecture**
+   - Major components and data flow (describe in text)
+
+5. **Database Design**
+   - Schema choices (SQL vs NoSQL) with justification
+   - Sharding, indexing, replication strategy
+
+6. **API Design**
+   - Key endpoints with sample requests/responses
+
+7. **Caching, Queues & Async**
+   - Caching strategy (Redis, CDN, etc.)
+   - Message queues (Kafka/RabbitMQ) use cases
+
+8. **Scaling, Load Balancing & Reliability**
+   - Horizontal scaling, rate limiting, fault tolerance
+
+9. **Bottlenecks, Trade-offs & Security**
+   - Main challenges and how to handle them
+   - Security considerations
+
+10. **Follow-up Questions**
+    - 3-4 good interviewer questions
+
+Use real-world best practices. Be detailed yet concise. Use diagrams/tables where helpful.

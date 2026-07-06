@@ -1,0 +1,46 @@
+Generate a clear Mermaid diagram for the following system design.
+
+**System**: {topic}
+**Design Summary**: {design_summary}
+
+Create a **flowchart** using valid Mermaid syntax. Use `flowchart TD` (top-down).
+
+CRITICAL SYNTAX RULES:
+1. Node IDs MUST be simple: Use only letters/numbers/underscores (e.g., User, API, DB1)
+2. Node labels can have spaces inside square brackets: NodeID["Label Text"]
+3. Arrows use: --> for simple, -->|"label text"| for labeled
+4. NO special characters in node IDs (no spaces, hyphens, parentheses)
+5. Use subgraphs for grouping: subgraph Title ... end
+
+EXAMPLE VALID SYNTAX:
+```mermaid
+flowchart TD
+    User["👤 User"]
+    App["📱 Mobile App"]
+    LB["⚖️ Load Balancer"]
+    
+    User --> App
+    App -->|"HTTPS"| LB
+    
+    subgraph Backend
+        API["🔧 API Server"]
+        Cache["⚡ Redis Cache"]
+    end
+    
+    LB --> API
+    API --> Cache
+```
+
+Requirements for YOUR diagram:
+- Use simple node IDs (User, API, DB, Cache, etc.)
+- Use emojis in labels for visual appeal
+- Include: Load Balancer, Cache, Database, API/Services
+- Show clear data flow with arrows
+- Group related components in subgraphs
+- Keep it under 15 nodes
+- Use proper Mermaid syntax as shown in example
+
+Output format:
+1. Mermaid code block (valid syntax)
+2. Brief explanation (3-4 sentences)
+3. 2-3 architecture improvement suggestions
