@@ -4,8 +4,12 @@
 
 # ── Secrets & Environment ────────────────────────────────────────────────────
 .env
-.env.*
-!.env.example          # keep the example template
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+# Do NOT ignore .env.example — that's safe to commit
 *.pem
 *.key
 secrets/
@@ -141,6 +145,25 @@ docker-compose.override.yml
 verify_auth_result.txt
 verify_v21_result.txt
 auth_test_result.txt
+
+# ── One-off test and verification scripts ─────────────────────────────────────
+auth_inline_test.py
+check_deps.py
+check_servers.py
+final_verification.py
+quick_test.py
+run_auth_test.py
+test_auth.py
+test_frontend.py
+test_grok.py
+verify_auth.py
+verify_frontend.py
+verify_v21.py
+
+# ── Temp status/doc files ─────────────────────────────────────────────────────
+DIAGRAM_FIX.md
+PROJECT_COMPLETE.md
+STATUS.md
 
 # ── Alembic generated versions (keep structure, not versions) ────────────────
 # alembic/versions/*.py   # uncomment if you want to exclude migration files
