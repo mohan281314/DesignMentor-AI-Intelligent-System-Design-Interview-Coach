@@ -1,9 +1,21 @@
 /**
  * Typed API client for the DesignMentor AI backend.
- * Reads NEXT_PUBLIC_API_URL from the environment.
+ *
+ * In development: Next.js rewrites /api/v1/* → http://localhost:8000/api/v1/*
+ * In production:  Next.js rewrites /api/v1/* → $NEXT_PUBLIC_API_URL/api/v1/*
+ *
+ * Using relative URLs means requests always go through the Next.js proxy,
+ * avoiding CORS issues entirely.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Legacy endpoints (/design, /chat etc.) still need the full backend URL
+// because they don't have a /api/v1/ prefix.
+const BACKEND_URL =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) ||
+  "http://localhost:8000";
+
+// All /api/v1/* calls use relative URLs — routed via Next.js rewrite proxy
+const API_BASE = "";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,7 +111,6 @@ async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // Attach auth token if present
   const token = typeof window !== "undefined"
     ? localStorage.getItem("access_token")
     : null;
@@ -113,7 +124,11 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  // /api/v1/* → relative URL (handled by Next.js rewrite proxy, no CORS)
+  // everything else → full backend URL
+  const url = path.startsWith("/api/v1") ? path : `${BACKEND_URL}${path}`;
+
+  const res = await fetch(url, { ...options, headers });
 
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
@@ -237,9 +252,9 @@ export const analyticsApi = {
 
 export const exportsApi = {
   designPdf: (designId: number) =>
-    `${BASE_URL}/api/v1/exports/designs/${designId}/pdf`,
+    `${BACKEND_URL}/api/v1/exports/designs/${designId}/pdf`,
   interviewPdf: (interviewId: number) =>
-    `${BASE_URL}/api/v1/exports/interviews/${interviewId}/pdf`,
+    `${BACKEND_URL}/api/v1/exports/interviews/${interviewId}/pdf`,
 };
 
 export const sharingApi = {
