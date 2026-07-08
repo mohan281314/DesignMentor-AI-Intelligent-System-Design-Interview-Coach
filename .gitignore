@@ -159,6 +159,11 @@ test_grok.py
 verify_auth.py
 verify_frontend.py
 verify_v21.py
+test_proxy.py
+test_register.py
+verify_login.py
+create_user.py
+reset_password.py
 
 # ── Temp status/doc files ─────────────────────────────────────────────────────
 DIAGRAM_FIX.md
