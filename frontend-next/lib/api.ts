@@ -1,21 +1,15 @@
 /**
  * Typed API client for the DesignMentor AI backend.
  *
- * In development: Next.js rewrites /api/v1/* → http://localhost:8000/api/v1/*
- * In production:  Next.js rewrites /api/v1/* → $NEXT_PUBLIC_API_URL/api/v1/*
- *
- * Using relative URLs means requests always go through the Next.js proxy,
- * avoiding CORS issues entirely.
+ * Uses the full backend URL directly for all calls.
+ * In development: http://localhost:8000
+ * In production: set NEXT_PUBLIC_API_URL env var to your backend URL
  */
 
-// Legacy endpoints (/design, /chat etc.) still need the full backend URL
-// because they don't have a /api/v1/ prefix.
 const BACKEND_URL =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) ||
-  "http://localhost:8000";
-
-// All /api/v1/* calls use relative URLs — routed via Next.js rewrite proxy
-const API_BASE = "";
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL)
+    ? process.env.NEXT_PUBLIC_API_URL
+    : "http://localhost:8000";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,9 +118,8 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // /api/v1/* → relative URL (handled by Next.js rewrite proxy, no CORS)
-  // everything else → full backend URL
-  const url = path.startsWith("/api/v1") ? path : `${BACKEND_URL}${path}`;
+  // Always use the full backend URL — avoids Next.js proxy issues
+  const url = `${BACKEND_URL}${path}`;
 
   const res = await fetch(url, { ...options, headers });
 
