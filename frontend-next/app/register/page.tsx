@@ -34,22 +34,22 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      // 1. Register — returns the new User object directly (no extra /me call)
+      // Step 1: Register — returns full user object directly
       const newUser = await authApi.register(
         form.email, form.password, form.full_name || undefined
       );
 
-      // 2. Login to get tokens
+      // Step 2: Login to get JWT tokens
       const tokens = await authApi.login(form.email, form.password);
 
-      // 3. Store tokens in localStorage FIRST so all later requests carry Authorization
+      // Step 3: Persist tokens immediately
       if (typeof window !== "undefined") {
         localStorage.setItem("access_token",  tokens.access_token);
         localStorage.setItem("refresh_token", tokens.refresh_token);
       }
       setTokens(tokens.access_token, tokens.refresh_token);
 
-      // 4. Use the user already returned from /register — no extra request needed
+      // Step 4: Use user from register response — no /me call needed
       setUser(newUser);
 
       toast.success("Account created! Welcome to DesignMentor AI");
@@ -88,28 +88,22 @@ export default function RegisterPage() {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name <span className="text-muted-foreground">(optional)</span></Label>
-                <Input
-                  id="name" placeholder="Alex Smith"
-                  value={form.full_name} onChange={(e) => update("full_name", e.target.value)}
-                />
+                <Input id="name" placeholder="Alex Smith"
+                  value={form.full_name} onChange={(e) => update("full_name", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email" type="email" placeholder="you@example.com"
-                  value={form.email} onChange={(e) => update("email", e.target.value)} required
-                />
+                <Input id="email" type="email" placeholder="you@example.com"
+                  value={form.email} onChange={(e) => update("email", e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password <span className="text-muted-foreground">(min 8 chars)</span></Label>
                 <div className="relative">
-                  <Input
-                    id="password"
+                  <Input id="password"
                     type={showPw ? "text" : "password"}
                     placeholder="Min. 8 characters"
                     value={form.password} onChange={(e) => update("password", e.target.value)}
-                    required className="pr-10"
-                  />
+                    required className="pr-10" />
                   <Button type="button" variant="ghost" size="icon"
                     className="absolute right-1 top-1 h-8 w-8"
                     onClick={() => setShowPw(!showPw)}>

@@ -11,6 +11,16 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 
+/** Decode a JWT payload without verifying signature (client-side only). */
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(base64));
+  } catch {
+    return null;
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { setTokens, setUser } = useAuthStore();
@@ -25,24 +35,37 @@ export default function LoginPage() {
     if (!email || !password) { toast.error("Please fill in all fields"); return; }
     setLoading(true);
     try {
-      // 1. Get tokens
+      // Step 1: Login → get tokens
       const tokens = await authApi.login(email, password);
 
-      // 2. Store tokens in localStorage FIRST so subsequent requests include Authorization header
+      // Step 2: Store tokens in localStorage immediately
       if (typeof window !== "undefined") {
         localStorage.setItem("access_token",  tokens.access_token);
         localStorage.setItem("refresh_token", tokens.refresh_token);
       }
       setTokens(tokens.access_token, tokens.refresh_token);
 
-      // 3. Now fetch user profile (token is available in header)
-      const user = await authApi.me();
-      setUser(user);
+      // Step 3: Build a minimal user object from the JWT payload
+      // This avoids a second network call that can fail if the proxy isn't ready
+      const payload = decodeJwtPayload(tokens.access_token);
+      const minimalUser = {
+        id:            payload?.sub ? parseInt(payload.sub) : 0,
+        email:         email,
+        full_name:     null,
+        avatar_url:    null,
+        is_active:     true,
+        is_verified:   false,
+        created_at:    new Date().toISOString(),
+        last_login_at: new Date().toISOString(),
+        profile:       null,
+      };
+      setUser(minimalUser as any);
 
-      toast.success(`Welcome back${user.full_name ? ", " + user.full_name : ""}!`);
+      // Step 4: Redirect — the dashboard will fetch full profile via /me
+      toast.success(`Welcome back!`);
       router.push("/dashboard");
     } catch (err: any) {
-      toast.error(err.message ?? "Login failed");
+      toast.error(err.message ?? "Login failed. Please check your email and password.");
     } finally {
       setLoading(false);
     }
@@ -89,7 +112,7 @@ export default function LoginPage() {
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign In
+                {loading ? "Signing in…" : "Sign In"}
               </Button>
             </form>
           </CardContent>
@@ -100,7 +123,7 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">or try without an account</span>
+                <span className="bg-card px-2 text-muted-foreground">or</span>
               </div>
             </div>
             <Link href="/design" className="w-full">
@@ -112,7 +135,7 @@ export default function LoginPage() {
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-primary hover:underline font-medium">
-            Sign up free
+            Create one free
           </Link>
         </p>
       </div>
