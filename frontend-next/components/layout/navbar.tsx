@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Sun, Moon, LogOut, User, BarChart2, BookOpen, Settings, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/lib/auth-store";
@@ -21,6 +22,10 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
+
+  // Prevent hydration mismatch from next-themes
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const handleLogout = () => {
     logout();
@@ -63,17 +68,19 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2 ml-auto">
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="h-9 w-9"
-          >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+          {/* Theme toggle — only render after mount to avoid hydration mismatch */}
+          {mounted && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="h-9 w-9"
+            >
+              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          )}
 
           {isAuthenticated ? (
             <>

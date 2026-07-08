@@ -8,8 +8,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 
@@ -18,14 +17,25 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { isAuthenticated, user, setUser, logout } = useAuthStore();
 
-  const [fullName, setFullName]     = useState(user?.full_name ?? "");
-  const [curPw, setCurPw]           = useState("");
-  const [newPw, setNewPw]           = useState("");
-  const [saving, setSaving]         = useState(false);
-  const [savingPw, setSavingPw]     = useState(false);
+  // mounted guard — prevents hydration mismatch with next-themes
+  const [mounted,  setMounted]  = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [curPw,    setCurPw]    = useState("");
+  const [newPw,    setNewPw]    = useState("");
+  const [saving,   setSaving]   = useState(false);
+  const [savingPw, setSavingPw] = useState(false);
 
-  useEffect(() => { if (!isAuthenticated) router.push("/login"); }, [isAuthenticated]);
-  useEffect(() => { if (user) setFullName(user.full_name ?? ""); }, [user]);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isAuthenticated) router.push("/login");
+  }, [mounted, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (user) setFullName(user.full_name ?? "");
+  }, [user]);
 
   const saveProfile = async () => {
     setSaving(true);
@@ -57,6 +67,13 @@ export default function SettingsPage() {
 
   const handleLogout = () => { logout(); router.push("/login"); };
 
+  // Prevent rendering until client hydration is complete
+  // This avoids the next-themes hydration mismatch
+  if (!mounted) return null;
+
+  // Active theme — fallback to "dark" if undefined (server-side)
+  const activeTheme = theme ?? "dark";
+
   return (
     <AppShell>
       <div className="max-w-xl mx-auto space-y-6 animate-fade-in">
@@ -76,26 +93,33 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-2">
               <Label>Full Name</Label>
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" />
+              <Input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your name"
+              />
             </div>
             <Button onClick={saveProfile} disabled={saving} className="gap-2">
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />} Save Profile
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save Profile
             </Button>
           </CardContent>
         </Card>
 
-        {/* Appearance */}
+        {/* Appearance — safe to render after mounted */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              {theme === "dark" ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
+              {activeTheme === "dark"
+                ? <Moon className="h-4 w-4 text-primary" />
+                : <Sun  className="h-4 w-4 text-primary" />}
               Appearance
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3">
               <Button
-                variant={theme === "light" ? "default" : "outline"}
+                variant={activeTheme === "light" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTheme("light")}
                 className="gap-2"
@@ -103,7 +127,7 @@ export default function SettingsPage() {
                 <Sun className="h-4 w-4" /> Light
               </Button>
               <Button
-                variant={theme === "dark" ? "default" : "outline"}
+                variant={activeTheme === "dark" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTheme("dark")}
                 className="gap-2"
@@ -111,7 +135,7 @@ export default function SettingsPage() {
                 <Moon className="h-4 w-4" /> Dark
               </Button>
               <Button
-                variant={theme === "system" ? "default" : "outline"}
+                variant={activeTheme === "system" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTheme("system")}
               >
@@ -121,7 +145,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Password */}
+        {/* Change Password */}
         {user && !user.oauth_provider && (
           <Card>
             <CardHeader>
@@ -132,26 +156,38 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Current Password</Label>
-                <Input type="password" value={curPw} onChange={(e) => setCurPw(e.target.value)} />
+                <Input
+                  type="password"
+                  value={curPw}
+                  onChange={(e) => setCurPw(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>New Password</Label>
-                <Input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="Min. 8 characters" />
+                <Input
+                  type="password"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  placeholder="Min. 8 characters"
+                />
               </div>
               <Button onClick={changePassword} disabled={savingPw} variant="outline" className="gap-2">
-                {savingPw && <Loader2 className="h-4 w-4 animate-spin" />} Update Password
+                {savingPw && <Loader2 className="h-4 w-4 animate-spin" />}
+                Update Password
               </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* Danger zone */}
+        {/* Danger Zone */}
         <Card className="border-destructive/30">
           <CardHeader>
             <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button variant="destructive" size="sm" onClick={handleLogout}>Sign Out</Button>
+            <Button variant="destructive" size="sm" onClick={handleLogout}>
+              Sign Out
+            </Button>
           </CardContent>
         </Card>
       </div>
