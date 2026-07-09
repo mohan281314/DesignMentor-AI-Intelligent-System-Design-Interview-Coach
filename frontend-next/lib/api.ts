@@ -1,15 +1,18 @@
 /**
  * Typed API client for the DesignMentor AI backend.
  *
- * Uses the full backend URL directly for all calls.
- * In development: http://localhost:8000
- * In production: set NEXT_PUBLIC_API_URL env var to your backend URL
+ * BACKEND_URL resolves in this order:
+ *  1. NEXT_PUBLIC_API_URL env var (set at build time — works in production)
+ *  2. window.location.origin + :8000 trick won't work cross-port
+ *  3. Hard-coded http://localhost:8000 fallback for local dev
+ *
+ * Using the full URL (not a relative path) avoids all Next.js proxy issues.
  */
 
-const BACKEND_URL =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL)
-    ? process.env.NEXT_PUBLIC_API_URL
-    : "http://localhost:8000";
+// This is evaluated at build time by Next.js for NEXT_PUBLIC_ vars.
+// In dev, NEXT_PUBLIC_API_URL is usually not set → falls back to localhost:8000
+const BACKEND_URL: string =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +31,7 @@ export interface User {
   is_verified: boolean;
   created_at: string;
   last_login_at: string | null;
+  oauth_provider?: string | null;
   profile: UserProfile | null;
 }
 
@@ -105,9 +109,9 @@ async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = typeof window !== "undefined"
-    ? localStorage.getItem("access_token")
-    : null;
+  // Read token from localStorage on every call (so it's always fresh)
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -118,7 +122,7 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Always use the full backend URL — avoids Next.js proxy issues
+  // Always use the full backend URL — never a relative path
   const url = `${BACKEND_URL}${path}`;
 
   const res = await fetch(url, { ...options, headers });
@@ -126,9 +130,11 @@ async function request<T>(
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
     try {
-      const err = await res.json();
-      detail = err.detail ?? JSON.stringify(err);
-    } catch {/* ignore */}
+      const body = await res.json();
+      detail = body.detail ?? JSON.stringify(body);
+    } catch {
+      /* ignore parse errors */
+    }
     throw new Error(detail);
   }
 
@@ -153,7 +159,8 @@ export const authApi = {
 
   me: () => request<User>("/api/v1/auth/me"),
 
-  logout: () => request<{ message: string }>("/api/v1/auth/logout", { method: "POST" }),
+  logout: () =>
+    request<{ message: string }>("/api/v1/auth/logout", { method: "POST" }),
 
   changePassword: (current_password: string, new_password: string) =>
     request("/api/v1/auth/change-password", {
@@ -189,11 +196,7 @@ export const legacyApi = {
       body: JSON.stringify({ question, user_answer, reference }),
     }),
 
-  generateDiagram: (
-    topic: string,
-    design_summary: string,
-    diagram_type = "flowchart"
-  ) =>
+  generateDiagram: (topic: string, design_summary: string, diagram_type = "flowchart") =>
     request<DiagramResult>("/diagram", {
       method: "POST",
       body: JSON.stringify({ topic, design_summary, diagram_type }),
@@ -212,53 +215,43 @@ export const legacyApi = {
     }),
 };
 
-// ─── Authenticated API endpoints ─────────────────────────────────────────────
+// ─── Authenticated v1 endpoints ───────────────────────────────────────────────
+
+export const analyticsApi = {
+  performance: () => request<PerformanceSummary>("/api/v1/analytics/performance"),
+  recommendations: () => request<Recommendation[]>("/api/v1/analytics/recommendations"),
+  activity: (limit = 10) => request<any[]>(`/api/v1/analytics/activity?limit=${limit}`),
+};
 
 export const designsApi = {
-  generate: (topic: string, save = true) =>
+  generate: (topic: string) =>
     request<DesignResult>("/api/v1/designs/generate", {
       method: "POST",
-      body: JSON.stringify(null),
-    }).catch(() =>
-      // fall back to legacy if not authenticated
-      legacyApi.generateDesign(topic)
-    ),
+      body: JSON.stringify({ topic }),
+    }).catch(() => legacyApi.generateDesign(topic)),
 
   list: (limit = 20, offset = 0) =>
     request<{ total: number; designs: any[] }>(
       `/api/v1/designs/?limit=${limit}&offset=${offset}`
     ),
 
-  get: (id: number) => request<any>(`/api/v1/designs/${id}`),
-
-  delete: (id: number) =>
-    request(`/api/v1/designs/${id}`, { method: "DELETE" }),
-};
-
-export const analyticsApi = {
-  performance: () => request<PerformanceSummary>("/api/v1/analytics/performance"),
-  recommendations: () =>
-    request<Recommendation[]>("/api/v1/analytics/recommendations"),
-  activity: (limit = 10) =>
-    request<any[]>(`/api/v1/analytics/activity?limit=${limit}`),
+  get:    (id: number) => request<any>(`/api/v1/designs/${id}`),
+  delete: (id: number) => request(`/api/v1/designs/${id}`, { method: "DELETE" }),
 };
 
 export const exportsApi = {
-  designPdf: (designId: number) =>
-    `${BACKEND_URL}/api/v1/exports/designs/${designId}/pdf`,
-  interviewPdf: (interviewId: number) =>
-    `${BACKEND_URL}/api/v1/exports/interviews/${interviewId}/pdf`,
+  designPdf:    (designId: number)    => `${BACKEND_URL}/api/v1/exports/designs/${designId}/pdf`,
+  interviewPdf: (interviewId: number) => `${BACKEND_URL}/api/v1/exports/interviews/${interviewId}/pdf`,
 };
 
 export const sharingApi = {
   create: (resource_type: string, resource_id: number, expires_in_days?: number) =>
-    request<{ public_id: string; share_url: string; expires_at: string | null }>("/api/v1/share/create", {
-      method: "POST",
-      body: JSON.stringify(null),
-    }),
+    request<{ public_id: string; share_url: string; expires_at: string | null }>(
+      "/api/v1/share/create",
+      { method: "POST", body: JSON.stringify({ resource_type, resource_id, expires_in_days }) }
+    ),
   get: (public_id: string) => request<any>(`/api/v1/share/${public_id}`),
 };
 
-// Health check
 export const healthCheck = () =>
   request<{ status: string; version: string }>("/health");
